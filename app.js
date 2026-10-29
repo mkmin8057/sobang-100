@@ -34,7 +34,9 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
 
 const dkey = (t = Date.now()) => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const midnight = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
-const day = () => S.days[dkey()] || (S.days[dkey()] = { r: 0, a: 0, c: 0, n: 0 });
+const day = () => S.days[dkey()] || (S.days[dkey()] = { r: 0, a: 0, c: 0, n: 0, m: 0 });
+// 하루 활동 = 암기 판(r) 또는 모의고사(m)
+const active = t => { const d = S.days[dkey(t)]; return !!(d && (d.r || d.m)); };
 const examAt = () => S.exam ? new Date(S.exam + 'T09:00:00').getTime() : null;
 function daysLeft() { const e = examAt(); return e == null ? null : Math.round((midnight(e) - midnight(Date.now())) / DAY); }
 function phase(dl) {
@@ -67,8 +69,10 @@ function buildRound() {
   const out = [];
   const old = P.filter(i => seen(i.id));
   take(old.filter(i => seen(i.id).due <= now).sort((a, b) => seen(a.id).l - seen(b.id).l || seen(a.id).due - seen(b.id).due), ROUND);
-  // 신규: 과목을 번갈아 투입 (빈출 주제 순)
-  const fresh = P.filter(i => !seen(i.id)).sort((a, b) => a.rank - b.rank);
+  // 신규: 모의고사에서 틀린 주제(boost) 먼저, 그다음 빈출 주제 순
+  // (boost 문항은 섞어서 한 주제에 몰리지 않게)
+  const unseen = P.filter(i => !seen(i.id)), hot = i => S.boost && S.boost[i.t];
+  const fresh = [...shuffle(unseen.filter(hot)), ...unseen.filter(i => !hot(i)).sort((a, b) => a.rank - b.rank)];
   take(fresh, Math.min(ROUND - out.length, Math.max(0, quota() - day().n)));
   take(old.slice().sort((a, b) => seen(a.id).l - seen(b.id).l || seen(a.id).due - seen(b.id).due), ROUND - out.length);
   take(fresh, ROUND - out.length);
@@ -258,7 +262,7 @@ function showReveal(e, given) {
 function finish() {
   const ids = R.order, ok = ids.filter(id => R.first[id]).length, sec = Math.round((Date.now() - R.t0) / 1000);
   const d = day(); d.r++;
-  const st = streak(), firstToday = d.r === 1;
+  const st = streak(), firstToday = d.r + (d.m || 0) === 1;
   if (st > (S.best || 0)) S.best = st;
   save();
   let ups = 0, lts = 0;
@@ -286,6 +290,7 @@ function renderHome() {
   $('#todayAcc').textContent = d && d.a ? Math.round(d.c / d.a * 100) + '%' : '–';
   $('#todayN').textContent = d ? d.a : 0;
   renderStreak();
+  if (typeof renderMock === 'function') renderMock();
   const chips = [...ready, ...SUBJ.filter(s => !s.items.length)].map(s => `<button class="chip" data-k="${s.key}" aria-pressed="${S.subj === s.key}" ${s.items.length ? '' : 'disabled'}>${esc(s.short)}${s.items.length ? '' : ' · 준비중'}</button>`);
   if (ready.length > 1) chips.unshift(`<button class="chip" data-k="all" aria-pressed="${S.subj === 'all'}">전체 섞기</button>`);
   $('#subjChips').innerHTML = chips.join('');
@@ -302,10 +307,10 @@ function renderHome() {
 const MILESTONES = [3, 7, 14, 21, 30, 50, 70, 100];
 let streakTimer = null;
 function renderStreak() {
-  const st = streak(), doneToday = !!(S.days[dkey()] || {}).r, el = $('#streakCard');
+  const st = streak(), doneToday = active(Date.now()), el = $('#streakCard');
   const week = [];
   for (let k = 6; k >= 0; k--) {
-    const t = Date.now() - k * DAY, on = !!(S.days[dkey(t)] || {}).r;
+    const t = Date.now() - k * DAY, on = active(t);
     week.push(`<div class="wd${on ? ' on' : ''}${k === 0 ? ' today' : ''}"><i>${on ? '🔥' : ''}</i><span>${'일월화수목금토'[new Date(t).getDay()]}</span></div>`);
   }
   const next = MILESTONES.find(m => m > st);
@@ -334,8 +339,8 @@ function celebrate(n) {
 }
 function streak() {
   let n = 0, t = Date.now();
-  if (!(S.days[dkey(t)] || {}).r) t -= DAY;
-  while ((S.days[dkey(t)] || {}).r) { n++; t -= DAY; }
+  if (!active(t)) t -= DAY;
+  while (active(t)) { n++; t -= DAY; }
   return n;
 }
 function renderCountdown() {
@@ -369,7 +374,7 @@ function renderCountdown() {
   tick(); tickTimer = setInterval(tick, 1000);
 }
 function urge(dl) {
-  const today = (S.days[dkey()] || {}).r || 0;
+  const today = active(Date.now());
   if (dl < 0) return '수고했습니다. 결과를 기다리며 실기 준비로!';
   if (dl === 0) return '오늘이다. 아는 것부터 침착하게.';
   if (!today) return dl <= 14 ? `🚨 D-${dl}인데 오늘 0판. 지금 한 판.` : '오늘 아직 0판. 1분이면 된다. 지금.';
@@ -382,7 +387,7 @@ function urge(dl) {
 
 /* ---------- 화면 전환 / 이벤트 ---------- */
 function show(id) {
-  ['home', 'play', 'result'].forEach(s => $('#' + s).hidden = s !== id);
+  ['home', 'play', 'result', 'mock', 'mockResult'].forEach(s => $('#' + s).hidden = s !== id);
   if (id === 'home') renderHome(); else { clearInterval(tickTimer); clearInterval(streakTimer); }
   window.scrollTo(0, 0);
 }
@@ -394,7 +399,7 @@ $('#subjChips').onclick = e => { const b = e.target.closest('.chip'); if (!b || 
 
 /* 설정 */
 const dlg = $('#settings');
-$('#openSettings').onclick = () => { $('#examInput').value = S.exam || ''; $('#quotaInput').value = String(S.quota || 0); $('#ver').textContent = 'v' + D.ver; dlg.showModal(); };
+$('#openSettings').onclick = () => { $('#examInput').value = S.exam || ''; $('#quotaInput').value = String(S.quota || 0); $('#ver').textContent = 'v' + D.ver; if (typeof renderExStatus === 'function') renderExStatus(); dlg.showModal(); };
 $('#examInput').onchange = e => { S.exam = e.target.value || null; save(); };
 $('#quotaInput').onchange = e => { S.quota = +e.target.value; save(); };
 dlg.addEventListener('close', renderHome);

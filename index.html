@@ -43,6 +43,8 @@
     <p class="hint">한 판 = 10문제 · 약 1~2분 · 원하는 만큼 반복</p>
   </section>
 
+  <section class="card mock" id="mockCard"></section>
+
   <section class="card">
     <h2>장기기억 게이지</h2>
     <div id="gauges"></div>
@@ -81,6 +83,33 @@
   </div>
 </main>
 
+<!-- 모의고사 -->
+<main id="mock" class="screen" hidden>
+  <header class="pbar">
+    <button class="icon-btn" id="mkQuit" aria-label="그만하기">✕</button>
+    <div class="mk-head"><b id="mkPos"></b><span id="mkTime" class="mono"></span></div>
+  </header>
+  <div class="mk-strip" id="mkStrip"></div>
+  <div class="mq-wrap">
+    <div class="mq" id="mkQ"></div>
+    <div class="mq-opts" id="mkOpts"></div>
+  </div>
+  <div class="mk-nav">
+    <button class="ghost" id="mkPrev">◀ 이전</button>
+    <button class="next" id="mkNext">다음 ▶</button>
+  </div>
+</main>
+
+<!-- 모의고사 결과 -->
+<main id="mockResult" class="screen" hidden>
+  <header class="bar"><h1>모의고사 결과</h1></header>
+  <section class="card res" id="mrBody"></section>
+  <div class="res-actions">
+    <button class="go" id="mrAgain">틀린 문제 다시 풀기</button>
+    <button class="ghost" id="mrHome">상황판으로</button>
+  </div>
+</main>
+
 <!-- 설정 -->
 <dialog id="settings">
   <form method="dialog" class="sheet">
@@ -103,6 +132,13 @@
       </div>
       <small>폰을 바꾸거나 브라우저 데이터를 지우기 전에 내보내 두세요.</small>
     </div>
+    <div class="field">기출 데이터 (실전 모의고사)
+      <div class="row">
+        <button type="button" class="ghost" id="exImport">기출 가져오기</button>
+        <button type="button" class="ghost" id="exDelete" hidden>삭제</button>
+      </div>
+      <small id="exStatus"></small>
+    </div>
     <div class="field danger">
       <button type="button" class="ghost" id="resetBtn">진도 전체 초기화</button>
     </div>
@@ -116,6 +152,8 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="data.js"></script>
+<input type="file" id="examFile" accept="application/json,.json" hidden>
 <script src="app.js"></script>
+<script src="exam.js"></script>
 </body>
 </html>
