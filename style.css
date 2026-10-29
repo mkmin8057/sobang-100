@@ -60,6 +60,34 @@ button{font:inherit;color:inherit;cursor:pointer}
 .cd.empty input{flex:1;font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--sheet);color:var(--ink)}
 .cd.empty button{border:0;background:var(--hydrant);color:#fff;border-radius:8px;padding:0 16px;font-weight:700}
 
+/* 연속 학습 */
+.streak{margin-top:6px}
+.st-top{display:flex;align-items:center;gap:12px}
+.flame{font-size:52px;line-height:1;animation:flick 1.8s ease-in-out infinite;transform-origin:50% 90%}
+.flame.cold{filter:grayscale(1);opacity:.45;animation:none}
+@keyframes flick{50%{transform:scale(1.08) rotate(-3deg)}}
+.st-n{font-size:16px;font-weight:700}
+.st-n b{font-family:var(--f-display);font-weight:400;font-size:40px;color:var(--amber);margin-right:4px;line-height:1}
+.st-sub{font-size:12px;color:var(--muted)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
+.wd{text-align:center}
+.wd i{display:grid;place-items:center;height:32px;border-radius:50%;background:var(--paper);font-style:normal;font-size:16px;border:2px solid transparent}
+.wd.on i{background:var(--amber-soft)}
+.wd.today i{border-color:var(--amber)}
+.wd span{font-size:11px;color:var(--muted)}
+.st-msg{margin-top:10px;font-size:14px;padding:8px 10px;border-radius:8px;background:var(--paper)}
+.streak.risk .st-msg{background:var(--hydrant-soft);color:var(--hydrant)}
+.streak.done .st-msg{background:var(--signal-soft);color:var(--signal)}
+.mono{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.plus1{background:var(--amber-soft);color:var(--amber);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:15px}
+.celebrate{position:fixed;inset:0;z-index:20;background:rgba(10,11,14,.82);display:grid;place-items:center;padding:24px}
+.cel-box{background:var(--sheet);border-radius:20px;padding:28px 20px 16px;text-align:center;max-width:340px;width:100%;animation:popin .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes popin{from{transform:scale(.6);opacity:0}}
+.cel-flame{font-size:84px;line-height:1;animation:flick 1.2s ease-in-out infinite;transform-origin:50% 90%}
+.cel-n{font-family:var(--f-display);font-size:64px;color:var(--amber);line-height:1.1}
+.cel-t{font-weight:700;font-size:18px}
+.cel-box p{color:var(--muted);font-size:14px}
+
 /* 오늘 */
 .today-row{display:grid;grid-template-columns:repeat(3,1fr);text-align:center}
 .today-row .k{display:block;font-size:12px;color:var(--muted)}

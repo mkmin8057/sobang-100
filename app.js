@@ -257,17 +257,21 @@ function showReveal(e, given) {
 }
 function finish() {
   const ids = R.order, ok = ids.filter(id => R.first[id]).length, sec = Math.round((Date.now() - R.t0) / 1000);
-  const d = day(); d.r++; save();
+  const d = day(); d.r++;
+  const st = streak(), firstToday = d.r === 1;
+  if (st > (S.best || 0)) S.best = st;
+  save();
   let ups = 0, lts = 0;
   ids.forEach(id => { const a = R.before[id], b = (seen(id) || { l: 0 }).l; if (b > a) ups++; if (a < 4 && b >= 4) lts++; });
   const pct = Math.round(ok / ids.length * 100);
   const tone = pct === 100 ? '완벽! 🔥' : pct >= 80 ? '좋아요' : pct >= 60 ? '조금 더' : '반복이 답';
-  $('#resBody').innerHTML = `<div class="big"><b style="color:${pct >= 60 ? 'var(--signal)' : 'var(--hydrant)'}">${ok}/${ids.length}</b><span>${tone}</span></div>
+  $('#resBody').innerHTML = (firstToday ? `<div class="plus1">🔥 <b>${st}일 연속</b> 달성 · 오늘 기록 지켰다!</div>` : '') + `<div class="big"><b style="color:${pct >= 60 ? 'var(--signal)' : 'var(--hydrant)'}">${ok}/${ids.length}</b><span>${tone}</span></div>
     <div class="stats"><div><b>${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}</b><span>소요</span></div>
     <div><b>${R.max}</b><span>최대 콤보</span></div><div><b>${d.r}판</b><span>오늘</span></div></div>
     ${ups ? `<div class="up">▲ 레벨업 ${ups}개${lts ? ` · 장기기억 진입 ${lts}개` : ''}</div>` : ''}
     ${R.wrongs.length ? `<ul>${R.wrongs.map(it => `<li>${esc(qText(it))}<br><b>${esc(ansText(it))}</b></li>`).join('')}</ul>` : ''}`;
   R = null; show('result');
+  if (firstToday && MILESTONES.includes(st)) celebrate(st);
 }
 const qText = it => it.type === 'fill' ? it.q.replace('＿', '( ? )') : it.q;
 const ansText = it => it.type === 'ox' ? (it.a ? 'O' : 'X') : it.type === 'match' ? it.pairs.map(p => p[0] + '→' + p[1]).join(', ') : it.a;
@@ -280,7 +284,8 @@ function renderHome() {
   const d = S.days[dkey()];
   $('#todayRounds').textContent = (d ? d.r : 0) + '판';
   $('#todayAcc').textContent = d && d.a ? Math.round(d.c / d.a * 100) + '%' : '–';
-  $('#streak').textContent = streak() + '일';
+  $('#todayN').textContent = d ? d.a : 0;
+  renderStreak();
   const chips = [...ready, ...SUBJ.filter(s => !s.items.length)].map(s => `<button class="chip" data-k="${s.key}" aria-pressed="${S.subj === s.key}" ${s.items.length ? '' : 'disabled'}>${esc(s.short)}${s.items.length ? '' : ' · 준비중'}</button>`);
   if (ready.length > 1) chips.unshift(`<button class="chip" data-k="all" aria-pressed="${S.subj === 'all'}">전체 섞기</button>`);
   $('#subjChips').innerHTML = chips.join('');
@@ -292,6 +297,40 @@ function renderHome() {
     return `<div class="gauge${k.total ? '' : ' lock'}"><div class="gl"><span>${esc(s.short)}</span><b>${k.total ? `장기 ${Math.round(k.m / t * 100)}% · ${k.m}/${k.total}` : '준비중'}</b></div>
       <div class="gb"><i style="width:${k.m / t * 100}%"></i><i style="width:${k.l / t * 100}%"></i></div></div>`;
   }).join('');
+}
+/* ---------- 연속 학습 (듀오링고식) ---------- */
+const MILESTONES = [3, 7, 14, 21, 30, 50, 70, 100];
+let streakTimer = null;
+function renderStreak() {
+  const st = streak(), doneToday = !!(S.days[dkey()] || {}).r, el = $('#streakCard');
+  const week = [];
+  for (let k = 6; k >= 0; k--) {
+    const t = Date.now() - k * DAY, on = !!(S.days[dkey(t)] || {}).r;
+    week.push(`<div class="wd${on ? ' on' : ''}${k === 0 ? ' today' : ''}"><i>${on ? '🔥' : ''}</i><span>${'일월화수목금토'[new Date(t).getDay()]}</span></div>`);
+  }
+  const next = MILESTONES.find(m => m > st);
+  el.className = 'streak card' + (doneToday ? ' done' : st ? ' risk' : '');
+  el.innerHTML = `<div class="st-top"><div class="flame${doneToday ? '' : ' cold'}">🔥</div>
+      <div><div class="st-n"><b>${st}</b>일 연속</div><div class="st-sub">${S.best ? `최고 기록 ${S.best}일` : '첫 판으로 기록을 시작하세요'}${next ? ` · ${next}일까지 ${next - st}일` : ''}</div></div></div>
+    <div class="week">${week.join('')}</div>
+    <div class="st-msg" id="brk"></div>`;
+  clearInterval(streakTimer);
+  const tick = () => {
+    const b = $('#brk'); if (!b) return;
+    if (doneToday) { b.innerHTML = '✓ 오늘 기록 지킴 · 내일도 한 판이면 이어져요'; return; }
+    const ms = midnight(Date.now()) + DAY - Date.now(), h = Math.floor(ms / 36e5), m = Math.floor(ms % 36e5 / 6e4), s = Math.floor(ms % 6e4 / 1e3);
+    const left = `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    b.innerHTML = st ? `⚠ <b>${st}일 기록</b>이 끊기기까지 <b class="mono">${left}</b>` : `오늘 첫 판까지 <b class="mono">${left}</b> 남음`;
+  };
+  tick(); streakTimer = setInterval(tick, 1000);
+}
+function celebrate(n) {
+  const el = $('#celebrate');
+  el.innerHTML = `<div class="cel-box"><div class="cel-flame">🔥</div><div class="cel-n">${n}일</div><div class="cel-t">연속 학습 달성!</div>
+    <p>${n >= 30 ? '이 정도면 습관이다. 합격까지 그대로.' : n >= 7 ? '일주일을 넘겼다. 이제 장기기억이 쌓이는 중.' : '좋은 출발. 끊기지 않게만 가자.'}</p><button class="go" id="celOk">계속</button></div>`;
+  el.hidden = false;
+  if (navigator.vibrate) navigator.vibrate([80, 60, 160]);
+  $('#celOk').onclick = () => { el.hidden = true; };
 }
 function streak() {
   let n = 0, t = Date.now();
@@ -344,7 +383,7 @@ function urge(dl) {
 /* ---------- 화면 전환 / 이벤트 ---------- */
 function show(id) {
   ['home', 'play', 'result'].forEach(s => $('#' + s).hidden = s !== id);
-  if (id === 'home') renderHome(); else clearInterval(tickTimer);
+  if (id === 'home') renderHome(); else { clearInterval(tickTimer); clearInterval(streakTimer); }
   window.scrollTo(0, 0);
 }
 $('#startBtn').onclick = startRound;

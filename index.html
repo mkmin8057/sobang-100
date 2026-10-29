@@ -27,12 +27,14 @@
     <button class="icon-btn" id="openSettings" aria-label="설정">⚙</button>
   </header>
 
+  <section id="streakCard" class="streak card"></section>
+
   <section id="countdown" class="cd"></section>
 
   <section class="today card">
     <div class="today-row">
       <div><span class="k">오늘</span><strong id="todayRounds">0판</strong></div>
-      <div><span class="k">연속</span><strong id="streak">0일</strong></div>
+      <div><span class="k">푼 문항</span><strong id="todayN">0</strong></div>
       <div><span class="k">정답률</span><strong id="todayAcc">–</strong></div>
     </div>
     <div class="subj" id="subjChips" role="group" aria-label="과목 선택"></div>
@@ -108,6 +110,8 @@
     <button class="go" value="close">닫기</button>
   </form>
 </dialog>
+
+<div class="celebrate" id="celebrate" hidden></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
