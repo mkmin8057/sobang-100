@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>소방 100일 작전</title>
+<meta name="theme-color" content="#c8102e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="소방100">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 홈: 작전 상황판 -->
+<main id="home" class="screen">
+  <header class="bar">
+    <h1>🔥 <b>100일</b> 작전</h1>
+    <button class="icon-btn" id="openSettings" aria-label="설정">⚙</button>
+  </header>
+
+  <section id="countdown" class="cd"></section>
+
+  <section class="today card">
+    <div class="today-row">
+      <div><span class="k">오늘</span><strong id="todayRounds">0판</strong></div>
+      <div><span class="k">연속</span><strong id="streak">0일</strong></div>
+      <div><span class="k">정답률</span><strong id="todayAcc">–</strong></div>
+    </div>
+    <div class="subj" id="subjChips" role="group" aria-label="과목 선택"></div>
+    <p class="todo" id="todo"></p>
+    <button class="go" id="startBtn">▶ 한 판 시작</button>
+    <p class="hint">한 판 = 10문제 · 약 1~2분 · 원하는 만큼 반복</p>
+  </section>
+
+  <section class="card">
+    <h2>장기기억 게이지</h2>
+    <div id="gauges"></div>
+    <p class="legend"><i class="lv-m"></i>장기기억(Lv4+) <i class="lv-l"></i>학습중 <i class="lv-n"></i>미학습</p>
+  </section>
+
+  <section class="card install" id="installCard" hidden>
+    <h2>📲 홈 화면에 추가</h2>
+    <p id="installText"></p>
+    <button class="ghost" id="installBtn" hidden>앱으로 설치</button>
+  </section>
+</main>
+
+<!-- 플레이 -->
+<main id="play" class="screen" hidden>
+  <header class="pbar">
+    <button class="icon-btn" id="quit" aria-label="그만하기">✕</button>
+    <div class="pdots" id="pdots"></div>
+    <div class="combo" id="combo"></div>
+  </header>
+  <div class="qwrap">
+    <div class="qmeta" id="qmeta"></div>
+    <div class="q" id="q"></div>
+    <div class="reveal" id="reveal" hidden></div>
+  </div>
+  <div class="answers" id="answers"></div>
+</main>
+
+<!-- 결과 -->
+<main id="result" class="screen" hidden>
+  <header class="bar"><h1>판 종료</h1></header>
+  <section class="card res" id="resBody"></section>
+  <div class="res-actions">
+    <button class="go" id="again">🔥 한 판 더</button>
+    <button class="ghost" id="toHome">상황판으로</button>
+  </div>
+</main>
+
+<!-- 설정 -->
+<dialog id="settings">
+  <form method="dialog" class="sheet">
+    <h2>설정</h2>
+    <label class="field">시험일
+      <input type="date" id="examInput">
+    </label>
+    <label class="field">하루 신규 문항
+      <select id="quotaInput">
+        <option value="0">자동 (시험일 기준 역산)</option>
+        <option value="10">10개</option><option value="20">20개</option>
+        <option value="30">30개</option><option value="50">50개</option>
+      </select>
+    </label>
+    <div class="field">진도 백업
+      <div class="row">
+        <button type="button" class="ghost" id="exportBtn">내보내기</button>
+        <button type="button" class="ghost" id="importBtn">가져오기</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+      <small>폰을 바꾸거나 브라우저 데이터를 지우기 전에 내보내 두세요.</small>
+    </div>
+    <div class="field danger">
+      <button type="button" class="ghost" id="resetBtn">진도 전체 초기화</button>
+    </div>
+    <small class="ver" id="ver"></small>
+    <button class="go" value="close">닫기</button>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
