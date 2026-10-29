@@ -1,5 +1,5 @@
 // 오프라인 우선: 앱 파일은 캐시에서 즉시, 백그라운드로 갱신 (다음 실행 때 반영)
-const VER='6f7169b3';
+const VER='6488401c';
 const CACHE='sobang100-'+VER;
 const CORE=['./','index.html','style.css','app.js','data.js','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png'];
 

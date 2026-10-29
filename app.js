@@ -147,7 +147,9 @@ function norm(s) {
 }
 function checkTyped(it, v) {
   const n = norm(v); if (!n) return false;
-  return [it.a, ...(it.alt || [])].some(a => { const x = norm(a); return x === n || (/^[\d.]+$/.test(x) && /^[\d.]+$/.test(n) && parseFloat(x) === parseFloat(n)); });
+  // 숫자는 값으로 비교 (1/2 = 0.5, 1.20 = 1.2)
+  const num = x => { const m = /^([\d.]+)(?:\/([\d.]+))?$/.exec(x); return m ? (m[2] ? parseFloat(m[1]) / parseFloat(m[2]) : parseFloat(m[1])) : NaN; };
+  return [it.a, ...(it.alt || [])].some(a => { const x = norm(a); return x === n || Math.abs(num(x) - num(n)) < 1e-9; });
 }
 function renderPad(it) {
   let v = '';
